@@ -119,7 +119,6 @@ __global__ void compute_new_means(float2* __restrict__ means,
 
 
 int main(int argc, const char* argv[]) {
-{
   if (argc < 3) {
     std::cerr << "usage: k-means <data-file> <k> [iterations]" << std::endl;
     std::exit(EXIT_FAILURE);
@@ -141,23 +140,15 @@ int main(int argc, const char* argv[]) {
 
   const size_t number_of_elements = h_points.size();
 
-  Data d_data(h_points);
+  Data d_points(h_points);
 
   std::mt19937 rng(42);
   std::shuffle(h_points.begin(), h_points.end(), rng);
   std::vector<float2> initial_means{h_points.begin(), h_points.begin() + k};
   Data d_means( initial_means );
-  
-    
-//   for (size_t cluster = 0; cluster < k; ++cluster) {
-//     std::cout << initial_means[cluster].x << " " << initial_means[cluster].y << std::endl;
-//   }
 
   const int threads = 64;
   const int blocks = (number_of_elements + threads - 1) / threads;
-
-  //std::cout << "Processing " << number_of_elements << " points on " << blocks
-  //          << " blocks x " << threads << " threads" << std::endl;
 
   // Every block keeps its own centroid data:
   // current x and y sum and number of points (from this block) assigned
@@ -174,8 +165,8 @@ int main(int argc, const char* argv[]) {
     cudaMemset(d_counts, 0, k * sizeof(int));
     d_sums.clear();
     
-    assign_clusters<<<blocks, threads, shared_memory>>>(d_data.coordinates,
-                                                        d_data.size,
+    assign_clusters<<<blocks, threads, shared_memory>>>(d_points.coordinates,
+                                                        d_points.size,
                                                         d_means.coordinates,
                                                         d_sums.coordinates,
                                                         k,
@@ -201,6 +192,4 @@ int main(int argc, const char* argv[]) {
   for (size_t cluster = 0; cluster < k; ++cluster) {
     std::cout << means[cluster].x << " " << means[cluster].y << std::endl;
   }
-}
-  cudaDeviceReset();
 }
