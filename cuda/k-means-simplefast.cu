@@ -52,12 +52,12 @@ atomicAdd(float2* addr, float2 val) {
     return result;
 }
 
-__global__ void assign_clusters(const float2* __restrict__ points,
+__global__ void assign_clusters(const float2* points,
                                 int data_size,
-                                const float2* __restrict__ means,
-                                float2* __restrict__ new_sums,
+                                const float2* means,
+                                float2* new_sums,
                                 int k,
-                                int* __restrict__ counts) {
+                                int* counts) {
     
   const int index = blockIdx.x * blockDim.x + threadIdx.x;
   if (index >= data_size) return;
@@ -97,7 +97,7 @@ __global__ void assign_clusters(const float2* __restrict__ points,
   atomicAdd(&block_new_sums[best_cluster], point);
   atomicAdd(&block_counts[best_cluster], 1);
   
-  // Wait until all the threads in a block are done updaiting
+  // Wait until all the threads in a block are done updating
   __syncthreads();
 
   
@@ -109,9 +109,9 @@ __global__ void assign_clusters(const float2* __restrict__ points,
   }
 }
 
-__global__ void compute_new_means(float2* __restrict__ means,
-                                  const float2* __restrict__ new_sum,
-                                  const int* __restrict__ counts) {
+__global__ void compute_new_means(float2* means,
+                                  const float2* new_sum,
+                                  const int* counts) {
   const int cluster = threadIdx.x;
   const int count = max(1, counts[cluster]);
   means[cluster] = new_sum[cluster] / count;
